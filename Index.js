@@ -1,12 +1,13 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
-import config from "./config.json" assert { type: "json" };
 
-// 🖤 Itachi Assistant Bot
+const token = process.env.TOKEN;
+const clientId = process.env.CLIENT_ID;
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// ===== SLASH COMMANDS =====
+// ✅ Slash command
 const commands = [
   new SlashCommandBuilder()
     .setName("work")
@@ -14,50 +15,55 @@ const commands = [
     .toJSON()
 ];
 
-// ===== REGISTER COMMANDS =====
-const rest = new REST({ version: "10" }).setToken(config.token);
-
+// ✅ Register command ONCE (safe method)
 async function registerCommands() {
+  const rest = new REST({ version: "10" }).setToken(token);
+
   try {
+    console.log("Registering slash commands...");
     await rest.put(
-      Routes.applicationCommands(config.clientId),
+      Routes.applicationCommands(clientId),
       { body: commands }
     );
-    console.log("🖤 Commands registered successfully");
+    console.log("Commands registered successfully");
   } catch (err) {
     console.error("Command register error:", err);
   }
 }
 
-// ===== BOT READY =====
-client.on("ready", () => {
-  console.log(`🖤 Itachi Assistant is online as ${client.user.tag}`);
+// ✅ Bot ready
+client.once("ready", () => {
+  console.log(`🖤 Itachi Assistant online as ${client.user.tag}`);
 });
 
-// ===== COMMAND HANDLER =====
+// ✅ Interaction handler
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "work") {
     await interaction.reply({
       content: `
-🖤 **ITACHI ASSISTANT - WORK PANEL**
+🖤 ITACHI ASSISTANT
 
 💼 REVIEW WORK  
-Instant Pay  
-₹5 - ₹7  
+₹5 - ₹7 (Instant Pay)
 
 📧 GMAIL WORK  
-Instant Pay (within 24 hours)  
-₹6 - ₹8  
+₹6 - ₹8 (Within 24h)
 
-⚡ More missions will unlock soon...
+⚡ More missions coming soon...
       `
     });
   }
 });
 
-// ===== START BOT =====
-registerCommands().then(() => {
-  client.login(config.token);
-});
+// ✅ START BOT
+(async () => {
+  if (!token || !clientId) {
+    console.log("Missing TOKEN or CLIENT_ID");
+    return;
+  }
+
+  await registerCommands();
+  client.login(token);
+})();
